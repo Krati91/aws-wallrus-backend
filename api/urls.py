@@ -1,0 +1,82 @@
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('signup/', views.CustomUserCreate.as_view(), name='signup'),
+    path('verify-email-phone/', views.EmailPhoneView.as_view(),
+         name='EmailPhoneView'),
+    path('app-list/',
+         views.AppList.as_view(), name='App_list'),
+    path('verify-otp/',
+         views.VerifyUserView.as_view(), name='VerifyUser'),
+    path('send-otp/', views.SendOTPView.as_view(), name='SendOTPView'),
+    path('edit-detail/',
+         views.Edit_Detail.as_view(), name='Edit_Detail'),
+    path('change-password/', views.ChangePasswordView.as_view(),
+         name='change-password'),
+    path('notification-settings', views.NotificationSettings.as_view(),
+         name='notification-settings'),
+
+    # Artist Apis
+    path('artist-snippet',
+         views.ArtistSnippet.as_view(), name='artist-snippet'),
+    #     path('artist-design-list/<int:user_id>',
+    #          views.ArtistDesign.as_view(), name='artist-design-list')
+    path('design-tag-list', views.DesignTagList.as_view(),
+         name='design-tag-list'),
+    path('upload-design', views.UploadDesign.as_view(), name='upload-design'),
+    path('under-review/', views.UnderReviewView.as_view(), name='under-review'),
+    path('user-type/', views.UserTypeView.as_view(), name='user-type'),
+
+    # Shop Apis
+    path('filter-list/<str:application_slug>',
+         views.FilterList.as_view(), name='tag-list'),
+    path('product-list/<str:application_slug>',
+         views.ApplicationProductList.as_view(), name='product-list'),
+    path('product-detail/<str:product_slug>',
+         views.ProductDetail.as_view(), name='product-detail'),
+    path('featured-artist-list/',
+         views.FeaturedArtistListView.as_view(), name='featured-artist-list'),
+    path('other-colorways/<str:product_slug>',
+         views.OtherColorways.as_view(), name='other-colorways'),
+    path('other-applications/<str:product_slug>',
+         views.OtherApplications.as_view(), name='other-applications'),
+    path('similar-designs/<str:product_slug>',
+         views.OtherColorways.as_view(), name='other-designs'),
+    path('designer-list/<str:application_slug>/',
+         views.DesignerListView.as_view(), name='designer-list'),
+    path('filter-tag/<str:tag_slug>/',
+         views.FilterTagList.as_view(), name='filter-tag'),
+    path('latest-design/',
+         views.LatestDesignList.as_view(), name='latest-design'),
+    path('artist-list-status/',
+         views.ArtistListStatus.as_view(), name='artist-list-status'),
+    path('Design-list/',
+         views.DesignListView.as_view(), name='Design-list'),
+    path('product-review/',
+         views.ProductReviewView.as_view(), name='product-review'),
+
+    # firm admin apis
+    path('firm-user-snippet', views.FirmUserSnippet.as_view(),
+         name='firm-user-snippet'),
+    path('firm-user-list', views.FirmUsersList.as_view(), name='firm-user-list'),
+    path('firm-order-list', views.FirmOrders.as_view(), name='firm-order-list'),
+    path('sales-graph', views.SalesGraph.as_view(), name='sales-graph'),
+
+    # wallrus-admin
+    path('admin-design-list', views.DesignList.as_view(), name='admin-design-list'),
+    path('admin-design-detail/<int:design_id>',
+         views.DesignDetail.as_view(), name='admin-design-detail'),
+    path('post-list', views.PostList.as_view(), name='post-list'),
+    path('post-detail/<slug:post_slug>',
+         views.PostDetail.as_view(), name='post-detail'),
+    path('new-artists-list', views.NewArtists.as_view(), name='new-artists-list'),
+    path('create-post', views.CreatePost.as_view(), name='create-post'),
+    path('order-list', views.OrderList.as_view(), name='order-list'),
+    path('order-details/<int:order_id>',
+         views.OrderDetail.as_view(), name='order-details'),
+    path('admin-artist-detail/<int:artist_id>', views.AdminArtistDetail.as_view(),
+         name='admin-artist-detail'),
+    path('artist-status/<int:artist_id>',
+         views.ApproveArtist.as_view(), name='artist-status')
+]
