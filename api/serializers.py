@@ -647,6 +647,21 @@ class FirmSalesGraphSerializer(serializers.ModelSerializer):
         fields = ['created_at', 'order_cost']
 
 
+class IntDecoratorDetailSerializer(serializers.ModelSerializer):
+    level = serializers.SerializerMethodField()
+    business_details = BusinessDetailSerializer()
+    bank_details = BankDetailSerializer()
+
+    def get_level(self, obj):
+        decorator = get_object_or_404(Interior_Decorator, user=obj.id)
+        return decorator.level.get_name_display()
+
+    class Meta:
+        model = CustomUser
+        fields = ['first_name', 'last_name', 'email',
+                  'phone', 'level', 'business_details', 'bank_details']
+
+
 ##################################################### WALLRUS ADMIN SERIALIZERS ###################################################
 class DesignListSerializer(serializers.ModelSerializer):
     class Meta:

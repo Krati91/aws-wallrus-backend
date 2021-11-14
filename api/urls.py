@@ -62,7 +62,8 @@ urlpatterns = [
     path('firm-user-list', views.FirmUsersList.as_view(), name='firm-user-list'),
     path('firm-order-list', views.FirmOrders.as_view(), name='firm-order-list'),
     path('sales-graph', views.SalesGraph.as_view(), name='sales-graph'),
-
+    path('decorator-detail/<decorator_id>',
+         views.IntDecoratorDetail.as_view(), name='decorator-detail'),
     # wallrus-admin
     path('admin-design-list', views.DesignList.as_view(), name='admin-design-list'),
     path('admin-design-detail/<int:design_id>',

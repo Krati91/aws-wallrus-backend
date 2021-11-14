@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from users.models import Interior_Decorator, CustomUser
-from ..serializers import FirmUserSerializer, FirmUserListSerializer, FirmOrderSerializer, FirmSalesGraphSerializer
+from ..serializers import FirmUserSerializer, FirmUserListSerializer, FirmOrderSerializer, FirmSalesGraphSerializer, IntDecoratorDetailSerializer
 from orders.models import Order
 
 
@@ -57,3 +57,14 @@ class SalesGraph(APIView):
         serializer = FirmSalesGraphSerializer(instance=object, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+class IntDecoratorDetail(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_user_objects(self, decorator_id):
+        return get_object_or_404(CustomUser, id=decorator_id, type=2)
+
+    def get(self, request, decorator_id):
+        object = self.get_user_objects(decorator_id)
+        serializer = IntDecoratorDetailSerializer(instance=object)
+        return Response(serializer.data, status=status.HTTP_200_OK)
