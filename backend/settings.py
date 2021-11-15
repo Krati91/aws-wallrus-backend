@@ -204,8 +204,8 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
     'https://www.googleapis.com/auth/userinfo.profile',
 ]
 
-CORS_ALLOWED_ORIGINS = ['*']
-
+# CORS_ALLOWED_ORIGINS = ['*']
+CORS_ORIGIN_ALLOW_ALL = True
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 # OAUTH2_PROVIDER = {
