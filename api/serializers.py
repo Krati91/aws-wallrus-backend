@@ -2,8 +2,7 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from django.contrib.auth import password_validation
-from django.db.models import Count
-from users.models import CustomUser, Interior_Decorator, RandomPassword, Artist
+from users.models import CustomUser, Interior_Decorator, RandomPassword, Artist, Firm
 from user_details.models import Address, BusinessDetail, BankDetail
 
 from .utils import get_tags_by_label, random_password_generator, Encrypt_and_Decrypt
@@ -11,7 +10,7 @@ from designs.models import Design, DesignTag, Colorway
 from notifications.models import ArtistNotificationSettings
 from product.models import Application, Product, ProductImages, Reviews, Tag
 from posts.models import Post
-from orders.models import Order, Item
+from orders.models import Order, Item, OrderStatus
 
 
 class Base64ImageField(serializers.ImageField):
@@ -576,7 +575,12 @@ class FirmUserListSerializer(serializers.ModelSerializer):
         return obj.get_commision_percent()
 
     def get_total_sale(self, obj):
-        pass
+        orders = Order.objects.filter(user=obj.user)
+        order_cost = 0
+        for order in orders:
+            for item in order.items.all():
+                order_cost += item.product.cost * item.quantity
+        return order_cost
 
     def get_first_name(self, obj):
         return obj.user.first_name
@@ -662,6 +666,27 @@ class IntDecoratorDetailSerializer(serializers.ModelSerializer):
                   'phone', 'level', 'business_details', 'bank_details']
 
 
+class CardDetailSerializer(serializers.ModelSerializer):
+    total_decorators = serializers.SerializerMethodField()
+    total_profit = serializers.SerializerMethodField()
+
+    def get_total_decorators(self, obj):
+        members = obj.get_members().count()
+        return members
+
+    def get_total_profit(self, obj):
+        orders = Order.objects.filter(user=obj.user)
+        order_cost = 0
+        for order in orders:
+            for item in order.items.all():
+                order_cost += item.product.cost * item.quantity
+        return order_cost
+
+    class Meta:
+        model = Firm
+        fields = ['total_decorators', 'total_profit']
+
+
 ##################################################### WALLRUS ADMIN SERIALIZERS ###################################################
 class DesignListSerializer(serializers.ModelSerializer):
     class Meta:
@@ -672,11 +697,12 @@ class DesignListSerializer(serializers.ModelSerializer):
 class DesignDetailSerializer(serializers.ModelSerializer):
     tags = UploadDesignTagSerializer(many=True)
     applications = ApplistSerializer(many=True)
+    colorway_set = ColowaySerializer(many=True)
 
     class Meta:
         model = Design
         fields = ['id', 'name', 'tags', 'is_customizable',
-                  'applications']
+                  'applications', 'colorway_set']
 
 
 class PostListSerializer(serializers.ModelSerializer):
@@ -746,20 +772,40 @@ class OrderDetailSerializer(serializers.ModelSerializer):
 
 class AdminArtistDetailSerializer(serializers.ModelSerializer):
     business_details = BusinessDetailSerializer()
-    personal_address = serializers.SerializerMethodField()
-
-    def get_personal_address(self, obj):
-        address = get_object_or_404(Address, type=1)
-        serializer = AddressSerializer(instance=address)
-        return serializer.data
 
     class Meta:
         model = CustomUser
         fields = ['first_name', 'last_name', 'username',
-                  'business_details', 'personal_address']
+                  'business_details', 'address_set']
 
 
 class UpdateArtistStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['is_active']
+
+
+class UpdateDesignStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Design
+        fields = ['is_approved']
+
+
+class UpdateOrderStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderStatus
+        fields = ['order', 'name']
+
+
+class MonthlySalesSerializer(serializers.ModelSerializer):
+    sales = serializers.SerializerMethodField()
+
+    def get_sales(self, obj):
+        order_cost = 0
+        for item in obj.items.all():
+            order_cost += item.product.cost * item.quantity
+        return order_cost
+
+    class Meta:
+        model = Order
+        fields = ['created_at', 'sales']

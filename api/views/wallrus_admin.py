@@ -7,9 +7,9 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 
 from designs.models import Design
-from ..serializers import DesignListSerializer, DesignDetailSerializer, PostListSerializer, PostDetailSerializer, NewArtistsSerializer, NewPostSerializer, OrderListSerializer, OrderDetailSerializer, AdminArtistDetailSerializer, UpdateArtistStatusSerializer
+from ..serializers import DesignListSerializer, DesignDetailSerializer, PostListSerializer, PostDetailSerializer, NewArtistsSerializer, NewPostSerializer, OrderListSerializer, OrderDetailSerializer, AdminArtistDetailSerializer, UpdateArtistStatusSerializer, UpdateDesignStatusSerializer, UpdateOrderStatusSerializer, MonthlySalesSerializer
 from posts.models import Post
-from users.models import CustomUser
+from users.models import CustomUser, Interior_Decorator
 from orders.models import Order
 
 
@@ -124,6 +124,7 @@ class AdminArtistDetail(APIView):
 
     def get(self, request, artist_id):
         object = self.get_user_object(artist_id)
+        print(object)
         serializer = AdminArtistDetailSerializer(instance=object)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
 
@@ -152,3 +153,84 @@ class ApproveArtist(APIView):
         else:
             print(serializer.errors)
             return Response(data={'error': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ApproveDesign(APIView):
+    permission_classes = [IsAdminUser, IsAuthenticated]
+
+    def get_design_object(self, design_id):
+        return get_object_or_404(Design, id=design_id)
+
+    def patch(self, request, design_id):
+        object = self.get_design_object(design_id)
+        design_status = request.GET['status']
+        if design_status == 'approve':
+            data = {
+                'is_approved': True
+            }
+        elif design_status == 'reject':
+            data = {
+                'is_approved': False
+            }
+        serializer = UpdateDesignStatusSerializer(instance=object, data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(data={'message': 'Status Updated'}, status=status.HTTP_200_OK)
+        else:
+            print(serializer.errors)
+            return Response(data={'error': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ApproveOrder(APIView):
+    permission_classes = [IsAdminUser, IsAuthenticated]
+
+    def post(self, request, order_id):
+        order_status = request.GET['status']
+        if order_status == 'approve':
+            data = {
+                'order': order_id,
+                'name': 'confirmed'
+            }
+        elif order_status == 'reject':
+            data = {
+                'order': order_id,
+                'name': 'rejected'
+            }
+        serializer = UpdateOrderStatusSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(data={'message': 'Status Updated'}, status=status.HTTP_200_OK)
+        else:
+            print(serializer.errors)
+            return Response(data={'error': 'Bad Request'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class MonthlySales(APIView):
+    def get_order_objects(self, from_date, to_date):
+        orders = Order.objects.filter(
+            created_at__gte=from_date) & Order.objects.filter(created_at__lte=to_date)
+        return orders
+
+    def get(self, request):
+        cur_date = date.today()
+        start_date = date(cur_date.year, cur_date.month, 1)
+
+        objects = self.get_order_objects(start_date, cur_date)
+        serializer = MonthlySalesSerializer(instance=objects, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class MonthlyDecoratorsCount(APIView):
+    def get_decorator_objects(self, from_date, to_date):
+        decorators = Interior_Decorator.objects.filter(user__is_active=True)
+        decorators = decorators.filter(
+            user__date_joined__gte=from_date) & decorators.filter(user__date_joined__lte=to_date)
+        return decorators
+
+    def get(self, request):
+        cur_date = date.today()
+        start_date = date(cur_date.year, cur_date.month, 1)
+
+        objects = self.get_order_objects(start_date, cur_date)
+        serializer = MonthlySalesSerializer(instance=objects, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
