@@ -65,6 +65,7 @@ urlpatterns = [
     path('decorator-detail/<decorator_id>',
          views.IntDecoratorDetail.as_view(), name='decorator-detail'),
     path('card-detail', views.CardDetail.as_view(), name='card-detail'),
+
     # wallrus-admin
     path('admin-design-list', views.DesignList.as_view(), name='admin-design-list'),
     path('admin-design-detail/<int:design_id>',
@@ -86,5 +87,22 @@ urlpatterns = [
     path('order-status/<int:order_id>',
          views.ApproveOrder.as_view(), name='order-status'),
     path('monthly-sales',
-         views.MonthlySales.as_view(), name='monthly-sales')
+         views.MonthlySales.as_view(), name='monthly-sales'),
+    path('decorators-count',
+         views.MonthlyDecoratorsCount.as_view(), name='decorators-count'),
+    path('artists-count',
+         views.MonthlyArtistsCount.as_view(), name='artists-count'),
+    path('bar-chart',
+         views.MonthlyBarChart.as_view(), name='artists-count'),
+    path('pie-chart', views.PieChart.as_view(), name='pie-chart'),
+
+    # decorator apis
+    path('decorator-snippet', views.DecoratorSnippet.as_view(),
+         name='decorator-snippet'),
+    path('decorator-favourites', views.DecoratorFavourites.as_view(),
+         name='decorator-favourites'),
+    path('decorator-collections', views.DecoratorCollections.as_view(),
+         name='decorator-collections'),
+    path('my-order', views.MyOrder.as_view(), name='my-order')
+
 ]

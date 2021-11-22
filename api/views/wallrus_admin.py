@@ -1,15 +1,15 @@
 from datetime import date
-
+import calendar
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework import serializers, status
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 
 from designs.models import Design
-from ..serializers import DesignListSerializer, DesignDetailSerializer, PostListSerializer, PostDetailSerializer, NewArtistsSerializer, NewPostSerializer, OrderListSerializer, OrderDetailSerializer, AdminArtistDetailSerializer, UpdateArtistStatusSerializer, UpdateDesignStatusSerializer, UpdateOrderStatusSerializer, MonthlySalesSerializer
+from ..serializers import DesignListSerializer, DesignDetailSerializer, PostListSerializer, PostDetailSerializer, NewArtistsSerializer, NewPostSerializer, OrderListSerializer, OrderDetailSerializer, AdminArtistDetailSerializer, UpdateArtistStatusSerializer, UpdateDesignStatusSerializer, UpdateOrderStatusSerializer, MonthlySalesSerializer, MonthlyDecoratorCountSerializer, MonthlyArtistCountSerializer, MonthlyBarChartSerializer
 from posts.models import Post
-from users.models import CustomUser, Interior_Decorator
+from users.models import CustomUser, Interior_Decorator, Artist
 from orders.models import Order
 
 
@@ -206,6 +206,8 @@ class ApproveOrder(APIView):
 
 
 class MonthlySales(APIView):
+    permission_classes = [IsAdminUser, IsAuthenticated]
+
     def get_order_objects(self, from_date, to_date):
         orders = Order.objects.filter(
             created_at__gte=from_date) & Order.objects.filter(created_at__lte=to_date)
@@ -221,16 +223,92 @@ class MonthlySales(APIView):
 
 
 class MonthlyDecoratorsCount(APIView):
+    permission_classes = [IsAdminUser, IsAuthenticated]
+
     def get_decorator_objects(self, from_date, to_date):
         decorators = Interior_Decorator.objects.filter(user__is_active=True)
-        decorators = decorators.filter(
-            user__date_joined__gte=from_date) & decorators.filter(user__date_joined__lte=to_date)
+        decorators = decorators.filter(user__date_joined__date__gte=from_date) & decorators.filter(
+            user__date_joined__date__lte=to_date)
+
+        decorators = decorators.values_list(
+            'user__date_joined__date').distinct()
         return decorators
 
     def get(self, request):
         cur_date = date.today()
+        last_day_of_month = calendar.monthrange(
+            cur_date.year, cur_date.month)[1]
         start_date = date(cur_date.year, cur_date.month, 1)
+        end_date = date(cur_date.year, cur_date.month, last_day_of_month)
 
-        objects = self.get_order_objects(start_date, cur_date)
-        serializer = MonthlySalesSerializer(instance=objects, many=True)
+        objects = self.get_decorator_objects(start_date, end_date)
+        serializer = MonthlyDecoratorCountSerializer(
+            instance=objects, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class MonthlyArtistsCount(APIView):
+    permission_classes = [IsAdminUser, IsAuthenticated]
+
+    def get_artist_objects(self, from_date, to_date):
+        artists = Artist.objects.filter(user__is_active=True)
+        artists = artists.filter(user__date_joined__date__gte=from_date) & artists.filter(
+            user__date_joined__date__lte=to_date)
+
+        artists = artists.values_list(
+            'user__date_joined__date').distinct()
+        return artists
+
+    def get(self, request):
+        cur_date = date.today()
+        last_day_of_month = calendar.monthrange(
+            cur_date.year, cur_date.month)[1]
+        start_date = date(cur_date.year, cur_date.month, 1)
+        end_date = date(cur_date.year, cur_date.month, last_day_of_month)
+
+        objects = self.get_artist_objects(start_date, end_date)
+        serializer = MonthlyArtistCountSerializer(
+            instance=objects, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class MonthlyBarChart(APIView):
+    permission_classes = [IsAdminUser, IsAuthenticated]
+
+    def get_artist_objects(self, from_date, to_date):
+        artists = Artist.objects.filter(user__is_active=True)
+        artists = artists.filter(user__date_joined__date__gte=from_date) & artists.filter(
+            user__date_joined__date__lte=to_date)
+
+        artists = artists.values_list(
+            'user__date_joined__date').distinct()
+        return artists
+
+    def get(self, request):
+        cur_date = date.today()
+        last_day_of_month = calendar.monthrange(
+            cur_date.year, cur_date.month)[1]
+        start_date = date(cur_date.year, cur_date.month, 1)
+        end_date = date(cur_date.year, cur_date.month, last_day_of_month)
+
+        objects = self.get_artist_objects(start_date, end_date)
+        serializer = MonthlyBarChartSerializer(
+            instance=objects, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class PieChart(APIView):
+    permission_classes = [IsAdminUser, IsAuthenticated]
+
+    def get_total_artists(self):
+        return Artist.objects.all().count()
+
+    def get_total_decorators(self):
+        return Interior_Decorator.objects.all().count()
+
+    def get(self, request):
+        data = {
+            'totalArtists': self.get_total_artists(),
+            'totalDecorators': self.get_total_decorators()
+        }
+        return Response(data, status=status.HTTP_200_OK)

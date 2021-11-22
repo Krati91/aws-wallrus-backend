@@ -6,13 +6,13 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.authentication import BasicAuthentication
-from users.models import CustomUser,Code
+from users.models import CustomUser, Code
 from user_details.models import Address, BankDetail, BusinessDetail
 from product.models import Application
 from django.contrib.auth import update_session_auth_hash
 from ..serializers import *
 
-from ..utils import Encrypt_and_Decrypt,send_mail_otp, send_otp,code_gen
+from ..utils import Encrypt_and_Decrypt, send_mail_otp, send_otp, code_gen
 
 
 class CustomUserCreate(APIView):
@@ -23,6 +23,7 @@ class CustomUserCreate(APIView):
         print(request.data)
 
         fullname = request.data['fullNameKey'].split(' ')
+        # firm = request.data.get('registered_firm', None)
         type = ['Artist', 'Interior Decorator', 'Organization']
 
         data = {}
@@ -390,7 +391,8 @@ class AppList(APIView):
         list = Application.objects.filter(is_active=True)
         serializer = ApplistSerializer(instance=list, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
-    
+
+
 class UserTypeView(APIView):
     '''
     User Type
@@ -403,51 +405,60 @@ class UserTypeView(APIView):
         serializer_type = UserTypeSerializer(instance=user_Basicinfo)
         return Response(data=serializer_type.data, status=status.HTTP_200_OK)
 
+
 class VerifyUserView(APIView):
     # authentication_classes=[BasicAuthentication]
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
+
     def post(self, request):
         user = CustomUser.objects.get(pk=request.user.id)
-        OTP=request.data["OTP"]
-        code=Code.objects.get(user=user)
-        if str(code.number)==OTP:
+        OTP = request.data["OTP"]
+        code = Code.objects.get(user=user)
+        if str(code.number) == OTP:
             code.save()
             return Response(data="VERIFIED", status=status.HTTP_200_OK)
         else:
             return Response(data="NOT VERIFIED", status=status.HTTP_401_UNAUTHORIZED)
-        
+
+
 class SendOTPView(APIView):
     # authentication_classes=[BasicAuthentication]
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
-    def post(self,request):
+
+    def post(self, request):
         user = CustomUser.objects.get(pk=request.user.id)
-        choice=request.data["choice"]
-        email=user.email
+        choice = request.data["choice"]
+        email = user.email
         Code.objects.get(user=user).save()
-        code=Code.objects.get(user=user).number
-        phone_number=user.phone
-        if choice=='mobile':
-            msg='Hii ! Your Verication Code for Login to Wallrus is '+str(code)+'.'
-            send_otp(phone_number,msg)
+        code = Code.objects.get(user=user).number
+        phone_number = user.phone
+        if choice == 'mobile':
+            msg = 'Hii ! Your Verication Code for Login to Wallrus is ' + \
+                str(code)+'.'
+            send_otp(phone_number, msg)
             return Response(data="OTP Sent", status=status.HTTP_200_OK)
-        elif choice=='mail':
-            msg="Hii ! Your Verication Code for Login to Wallrus is " + code + "."
-            send_mail_otp(email,msg)
+        elif choice == 'mail':
+            msg = "Hii ! Your Verication Code for Login to Wallrus is " + code + "."
+            send_mail_otp(email, msg)
             return Response(data="OTP Sent", status=status.HTTP_200_OK)
+
 
 class EmailPhoneView(APIView):
     parser_classes = [MultiPartParser, FormParser]
-    def post(self,request):
-        choice=request.data["choice"]
-        value=request.data["value"]
-        code =code_gen()
-        if choice=='sms':
-            msg='Hii ! Your Verication Code for Login to Wallrus is '+str(code)+'.'
-            send_otp(value,msg)
+
+    def post(self, request):
+        choice = request.data["choice"]
+        value = request.data["value"]
+        code = code_gen()
+        if choice == 'sms':
+            msg = 'Hii ! Your Verication Code for Login to Wallrus is ' + \
+                str(code)+'.'
+            send_otp(value, msg)
             return Response(data=code, status=status.HTTP_200_OK)
-        elif choice=='email':
-            msg="Hii ! Your Verication Code for Login to Wallrus is " + str(code) + "."
-            send_mail_otp(value,msg)
+        elif choice == 'email':
+            msg = "Hii ! Your Verication Code for Login to Wallrus is " + \
+                str(code) + "."
+            send_mail_otp(value, msg)
             return Response(data=code, status=status.HTTP_200_OK)

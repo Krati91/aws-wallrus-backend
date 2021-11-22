@@ -5,10 +5,11 @@ from django.contrib.auth import password_validation
 from users.models import CustomUser, Interior_Decorator, RandomPassword, Artist, Firm
 from user_details.models import Address, BusinessDetail, BankDetail
 
+from django.db.models import Count
 from .utils import get_tags_by_label, random_password_generator, Encrypt_and_Decrypt
 from designs.models import Design, DesignTag, Colorway
 from notifications.models import ArtistNotificationSettings
-from product.models import Application, Product, ProductImages, Reviews, Tag
+from product.models import Application, Product, ProductImages, Reviews, Tag, Collection
 from posts.models import Post
 from orders.models import Order, Item, OrderStatus
 
@@ -496,11 +497,13 @@ class ArtistListStatusSerializer(serializers.ModelSerializer):
     Unique_id = serializers.SerializerMethodField()
     Designs = serializers.SerializerMethodField()
     user = ProfileImageSerializer()
+    design_images = serializers.SerializerMethodField()
+
 
     class Meta:
         model = Artist
         fields = ['full_name', 'followers',
-                  'Designs', 'status', 'user', 'Unique_id']
+                  'Designs', 'status', 'user', 'Unique_id', 'design_images']
 
     def get_full_name(self, obj):
         return obj.user.first_name+' '+obj.user.last_name
@@ -520,6 +523,10 @@ class ArtistListStatusSerializer(serializers.ModelSerializer):
     def get_Designs(self, obj):
         return Design.objects.filter(artist=obj.user).count()
 
+    def get_design_images(self, obj):
+        products = Product.objects.filter(design__artist=obj.user)
+        images = [product.get_display_image() for product in products]
+        return images[0:3]
 
 class DesignSerializer(serializers.ModelSerializer):
     designer_name = serializers.SerializerMethodField()
@@ -809,3 +816,142 @@ class MonthlySalesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ['created_at', 'sales']
+
+
+class MonthlyDecoratorCountSerializer(serializers.ModelSerializer):
+    decorators_count = serializers.SerializerMethodField()
+
+    def get_decorators_count(self, obj):
+        return Interior_Decorator.objects.filter(user__date_joined__date=obj[0]).values('user__date_joined__date').annotate(
+            noOfDecorators=Count('user__date_joined')).order_by()
+
+    class Meta:
+        model = Interior_Decorator
+        fields = ['decorators_count']
+
+
+class MonthlyArtistCountSerializer(serializers.ModelSerializer):
+    artists_count = serializers.SerializerMethodField()
+
+    def get_artists_count(self, obj):
+        return Artist.objects.filter(user__date_joined__date=obj[0]).values('user__date_joined__date').annotate(
+            noOfartists=Count('user__date_joined')).order_by()
+
+    class Meta:
+        model = Artist
+        fields = ['artists_count']
+
+
+class MonthlyBarChartSerializer(serializers.ModelSerializer):
+    count = serializers.SerializerMethodField()
+
+    def get_count(self, obj):
+        artists = Artist.objects.filter(user__date_joined__date=obj[0]).values('user__date_joined__date').annotate(
+            noOfartists=Count('user__date_joined')).order_by()
+        decorators = Interior_Decorator.objects.filter(user__date_joined__date=obj[0]).values('user__date_joined__date').annotate(
+            noOfDecorators=Count('user__date_joined')).order_by()
+        return artists, decorators
+
+    class Meta:
+        model = Artist
+        fields = ['count']
+
+############################################# DECORATOR SERIALIZERS ###################################################################
+
+
+class DecoratorSnippetSerializer(serializers.ModelSerializer):
+    level = serializers.SerializerMethodField()
+
+    def get_level(self, obj):
+        return obj.interior_decorator.level.get_name_display()
+
+    class Meta:
+        model = CustomUser
+        fields = ['first_name', 'last_name', 'level']
+
+
+class FavouriteSerializer(serializers.ModelSerializer):
+    artist = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
+
+    def get_artist(self, obj):
+        return obj.design.get_artist_name()
+
+    def get_image(self, obj):
+        return obj.get_display_image()
+
+    class Meta:
+        model = Product
+        fields = ['artist', 'image']
+
+
+class ProductSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+
+    def get_image(self, obj):
+        return obj.get_display_image()
+
+    class Meta:
+        model = Product
+        fields = ['image']
+
+
+class CollectionSerializer(serializers.ModelSerializer):
+    products = ProductSerializer(many=True)
+    number_of_designs = serializers.SerializerMethodField()
+    number_of_artists = serializers.SerializerMethodField()
+
+    def get_number_of_designs(self, obj):
+        designs = []
+        for product in obj.products.all():
+            if product.design not in designs:
+                designs.append(product.design)
+        return len(designs)
+
+    def get_number_of_artists(self, obj):
+        artists = []
+        for product in obj.products.all():
+            if product.design.artist not in artists:
+                artists.append(product.design.artist)
+        return len(artists)
+
+    class Meta:
+        model = Collection
+        fields = ['name', 'products',
+                  'number_of_designs', 'number_of_artists']
+
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
+    cost = serializers.SerializerMethodField()
+    artist = serializers.SerializerMethodField()
+
+    def get_image(self, obj):
+        return obj.product.get_display_image()
+
+    def get_name(self, obj):
+        return f'{obj.product.design.name}.{obj.product.colorway.name}.{obj.product.application}'
+
+    def get_cost(self, obj):
+        return obj.product.cost
+
+    def get_artist(self, obj):
+        return obj.product.design.artist.first_name + ' ' + obj.product.design.artist.last_name
+
+    class Meta:
+        model = Item
+        fields = ['image', 'name', 'cost',
+                  'quantity', 'width', 'height', 'artist']
+
+
+class MyOrderSerializer(serializers.ModelSerializer):
+    items = OrderItemSerializer(many=True)
+    order_status = serializers.SerializerMethodField()
+
+    def get_order_status(self, obj):
+        return obj.order_status.all().order_by('-timestamp').first().name
+
+    class Meta:
+        model = Order
+        fields = ['items', 'order_status']
