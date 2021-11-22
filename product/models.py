@@ -46,12 +46,14 @@ class Product(models.Model):
     is_active = models.BooleanField(default=True)
     slug = models.CharField(max_length=250, null=True, blank=True)
     slug_tag = models.CharField(max_length=250, null=True, blank=True)
+    favourited_by = models.ManyToManyField(CustomUser, limit_choices_to={
+        'type': 2}, blank=True)
 
     def __str__(self):
         return f'{self.design.name}.{self.colorway.name}.{self.application}'
-    
+
     def get_slug(self):
-        slug=''
+        slug = ''
         try:
             for items in self.tags.all():
                 slug += items.name+' '
@@ -122,3 +124,10 @@ class Reviews(models.Model):
 
     class Meta:
         verbose_name_plural = 'Reviews'
+
+
+class Collection(models.Model):
+    user = models.ForeignKey(CustomUser, limit_choices_to={
+                             'type': 2}, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    products = models.ManyToManyField(Product)

@@ -22,6 +22,7 @@ class Cart(models.Model):
 
 STATUS_CHOICES = [
     ('pending', 'Pending'),
+    ('rejected', 'rejected'),
     ('confirmed', 'Confirmed'),
     ('shipped', 'Shipped'),
     ('delivered', 'Delivered')
