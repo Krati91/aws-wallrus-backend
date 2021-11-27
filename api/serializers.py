@@ -7,11 +7,11 @@ from user_details.models import Address, BusinessDetail, BankDetail
 
 from django.db.models import Count
 from .utils import get_tags_by_label, random_password_generator, Encrypt_and_Decrypt
-from designs.models import Design, DesignTag, Colorway
+from designs.models import Design, DesignTag, Colorway, Customization, UploadOwnDesign
 from notifications.models import ArtistNotificationSettings
 from product.models import Application, Product, ProductImages, Reviews, Tag, Collection
 from posts.models import Post
-from orders.models import Order, Item, OrderStatus
+from orders.models import Order, Item, OrderStatus, MeasurementRequest
 
 
 class Base64ImageField(serializers.ImageField):
@@ -926,6 +926,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
     cost = serializers.SerializerMethodField()
     artist = serializers.SerializerMethodField()
+    material = serializers.SerializerMethodField()
 
     def get_image(self, obj):
         return obj.product.get_display_image()
@@ -939,10 +940,13 @@ class OrderItemSerializer(serializers.ModelSerializer):
     def get_artist(self, obj):
         return obj.product.design.artist.first_name + ' ' + obj.product.design.artist.last_name
 
+    def get_material(self, obj):
+        return obj.product.material
+
     class Meta:
         model = Item
         fields = ['image', 'name', 'cost',
-                  'quantity', 'width', 'height', 'artist']
+                  'quantity', 'width', 'height', 'artist', 'material']
 
 
 class MyOrderSerializer(serializers.ModelSerializer):
@@ -955,3 +959,18 @@ class MyOrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ['items', 'order_status']
+
+class CustomizeDesignSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Customization
+        exclude = ['id']
+
+class RequestMeasurementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MeasurementRequest
+        exclude = ['id']
+
+class UploadOwnDesignSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UploadOwnDesign
+        exclude = ['id']

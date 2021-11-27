@@ -47,3 +47,18 @@ class OrderStatus(models.Model):
 
     class Meta:
         verbose_name_plural = 'Order Status'
+
+class MeasurementRequest(models.Model):
+    name = models.CharField(max_length=255)
+    line1 = models.TextField()
+    line2 = models.TextField()
+    city = models.CharField(max_length=150)
+    state = models.CharField(max_length=150)
+    pincode = models.IntegerField()
+    date = models.DateField()
+    timeframe_of_measurement = models.CharField(max_length=255)
+    remarks = models.TextField()
+    site_image1 = models.ImageField(upload_to='site_image/')
+    site_image2 = models.ImageField(upload_to='site_image/', null=True, blank=True)
+    site_image3 = models.ImageField(upload_to='site_image/', null=True, blank=True)
+    site_image4 = models.ImageField(upload_to='site_image/', null=True, blank=True)

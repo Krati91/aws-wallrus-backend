@@ -26,7 +26,8 @@ class CustomUserAdmin(UserAdmin):
         }),
     )
 
-    list_display = ('id', 'email', 'phone', 'first_name', 'last_name', 'type')
+    list_display = ('id', 'email', 'phone', 'first_name',
+                    'last_name', 'type', 'is_active')
     search_fields = ('email', 'phone')
 
 

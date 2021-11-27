@@ -1,16 +1,18 @@
 from datetime import date
 import calendar
 from django.shortcuts import get_object_or_404
+
 from rest_framework.views import APIView
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
 from users.models import CustomUser
-from product.models import Product, Collection
+from product.models import Product, Collection, Application
 from orders.models import Order
 
-from ..serializers import CollectionSerializer, DecoratorSnippetSerializer, FavouriteSerializer, MyOrderSerializer
+from ..serializers import CollectionSerializer, DecoratorSnippetSerializer, FavouriteSerializer, \
+    MyOrderSerializer, CustomizeDesignSerializer, RequestMeasurementSerializer, UploadOwnDesignSerializer
 
 
 class DecoratorSnippet(APIView):
@@ -59,3 +61,82 @@ class MyOrder(APIView):
         objects = self.get_order_objects(request.user)
         serializer = MyOrderSerializer(instance=objects, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class CustomizeDesign(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_application_id(self, application_slug):
+        object = get_object_or_404(Application, slug=application_slug, is_active=True)
+        return object.id
+    
+    def get_product_id(self, product_slug):
+        object = get_object_or_404(Product, slug=product_slug)
+        return object.sku
+
+    def post(self, request):
+        data = {
+            'name': request.data['name'],
+            'phone_number': request.data['phone_number'],
+            'application': self.get_application_id(request.data['application']),
+            'product': self.get_product_id(request.data['product']),
+            'width': request.data['width'],
+            'height': request.data['height'],
+            'unit': request.data['unit'],
+            'remarks': request.data['remarks'],
+            'image1': request.data['image1'],
+            'image2': request.data.get('image2', None),
+            'image3': request.data.get('image3', None),
+            'image4': request.data.get('image4', None),
+        }
+        serializer = CustomizeDesignSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message':'Data is successfully saved'}, status=status.HTTP_200_OK)
+        else:
+            print(serializer.errors)
+            return Response({'error':'Data is not saved'}, status=status.HTTP_400_BAD_REQUEST)
+
+class RequestMeasurement(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        serializer = RequestMeasurementSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message':'Data is successfully saved'}, status=status.HTTP_200_OK)
+        else:
+            print(serializer.errors)
+            return Response({'error':'Data is not saved'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UploadOwnDesign(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_application_id(self, application_slug):
+        object = get_object_or_404(Application, slug=application_slug, is_active=True)
+        return object.id
+    
+    def get_product_id(self, product_slug):
+        object = get_object_or_404(Product, slug=product_slug)
+        return object.sku
+
+    def post(self, request):
+        data = {
+            'name': request.data['name'],
+            'phone_number': request.data['phone_number'],
+            'application': self.get_application_id(request.data['application']),
+            'product': self.get_product_id(request.data['product']),
+            'width': request.data['width'],
+            'height': request.data['height'],
+            'remarks': request.data['remarks'],
+            'link': request.data['link'],
+            'unit': request.data['unit'],
+            'price': request.data['price']
+        }
+        serializer = UploadOwnDesignSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message':'Data is successfully saved'}, status=status.HTTP_200_OK)
+        else:
+            print(serializer.errors)
+            return Response({'error':'Data is not saved'}, status=status.HTTP_400_BAD_REQUEST)

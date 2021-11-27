@@ -1,8 +1,9 @@
 from django.db import models
+from django.db.models.fields import TextField
 from django.utils.text import slugify
 
 from users.models import CustomUser
-from product.models import Application
+from product.models import Application, Product
 
 
 class DesignTag(models.Model):
@@ -58,8 +59,33 @@ class Colorway(models.Model):
     image_url = models.URLField()
     color_tags = models.ManyToManyField(
         DesignTag, limit_choices_to={'label': 'Color'})
-    favourited_by = models.ManyToManyField(CustomUser, limit_choices_to={
-        'type': 2}, blank=True)
 
     def __str__(self):
         return f'{self.name}'
+
+class Customization(models.Model):
+    name = models.CharField(max_length=255)
+    phone_number = models.CharField(max_length=10)
+    application = models.ForeignKey(Application, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)  
+    width = models.IntegerField()
+    height = models.IntegerField()
+    unit = models.CharField(max_length=4)
+    remarks = models.TextField()
+    image1 = models.ImageField(upload_to='custom_designs/')
+    image2 = models.ImageField(upload_to='custom_designs/', null=True, blank=True)
+    image3 = models.ImageField(upload_to='custom_designs/', null=True, blank=True)
+    image4 = models.ImageField(upload_to='custom_designs/', null=True, blank=True)
+
+
+class UploadOwnDesign(models.Model):
+    name = models.CharField(max_length=255)
+    phone_number = models.CharField(max_length=10)
+    application = models.ForeignKey(Application, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)  
+    width = models.IntegerField()
+    height = models.IntegerField()
+    unit = models.CharField(max_length=4)
+    remarks = models.TextField()
+    link = models.URLField()
+    price = models.IntegerField()

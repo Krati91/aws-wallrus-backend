@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import DesignTag, Design, Colorway
+from .models import Customization, DesignTag, Design, Colorway
 # Register your models here.
 
 
@@ -24,3 +24,4 @@ class DesignAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Design, DesignAdmin)
+admin.site.register(Customization)

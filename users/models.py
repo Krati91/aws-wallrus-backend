@@ -125,12 +125,15 @@ class Interior_Decorator(BaseUserType):
         max_digits=5, decimal_places=2, default=0)
     level = models.ForeignKey(
         CommissionGroup, on_delete=models.SET_NULL, null=True)
+    
 
     def get_commision_percent(self):
         if not self.platinum_commission_percent:
             return self.level.commission_percent
         else:
             return self.platinum_commission_percent
+
+    # def get_decorators_in_a_day(self):
 
 
 class Artist(BaseUserType):

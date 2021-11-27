@@ -56,10 +56,6 @@ def at_ending(sender, instance, created, **kwargs):
 @receiver(post_save, sender=Order)
 def at_ending(sender, instance, created, **kwargs):
     if created:
-        for item in instance.items.all():
-            instance.order_cost += item.product.cost * item.quantity
-        print(instance.order_cost)
-        instance.save()
         print('Instance={0} created'.format(instance))
 
         OrderStatus.objects.create(order=instance, name='pending')

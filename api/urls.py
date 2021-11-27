@@ -103,6 +103,8 @@ urlpatterns = [
          name='decorator-favourites'),
     path('decorator-collections', views.DecoratorCollections.as_view(),
          name='decorator-collections'),
-    path('my-order', views.MyOrder.as_view(), name='my-order')
-
+    path('my-order', views.MyOrder.as_view(), name='my-order'),
+    path('customize-design', views.CustomizeDesign.as_view(), name='customize-design'),
+    path('request-measurement', views.RequestMeasurement.as_view(), name='request-measurement'),
+     path('upload-own-design', views.UploadOwnDesign.as_view(), name='upload-own-design')
 ]

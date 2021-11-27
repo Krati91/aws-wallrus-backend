@@ -6,7 +6,7 @@ from .models import *
 
 admin.site.register(Item)
 admin.site.register(Cart)
-
+admin.site.register(MeasurementRequest)
 
 class OrderStatus(admin.StackedInline):
     model = OrderStatus

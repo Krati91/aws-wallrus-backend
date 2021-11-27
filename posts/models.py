@@ -10,7 +10,7 @@ CATEGORY_CHOICES = [
 
 
 class Post(models.Model):
-    title = models.CharField(max_length=255)
+    title = models.CharField(max_length=255, unique=True)
     category = models.CharField(choices=CATEGORY_CHOICES, max_length=12)
     content = models.TextField()
     slug = models.SlugField(blank=True)
